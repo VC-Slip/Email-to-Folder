@@ -11,7 +11,7 @@ base_folder = os.path.join(desktop_path, "Bids pending 2016", "Bids Pending", "B
 outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
 sent_items = outlook.GetDefaultFolder(5)  # 5 = olFolderSentMail
 
-# Get the most recent sent email
+# Get the most recent sent email.
 message = sent_items.Items.GetLast()
 
 # Try to extract the quote number (e.g., Q24024) from the subject
