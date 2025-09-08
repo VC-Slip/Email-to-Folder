@@ -36,7 +36,7 @@ if quote_match:
         folder_path = os.path.join(base_folder, matching_folder, "Correspondence")
 
 else:
-    # If no quote number found, dump into a general folder
+    # If no quote number found, dump into a general folder.
     folder_path = os.path.join(base_folder, "No_Quote_Found", "Correspondence")
 
 # Make sure Correspondence folder exists
