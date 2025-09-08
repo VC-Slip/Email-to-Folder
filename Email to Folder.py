@@ -31,7 +31,7 @@ if quote_match:
     if matching_folder:
         folder_path = os.path.join(base_folder, matching_folder, "Correspondence")
     else:
-        # If no folder exists, create one with just the quote number
+        # If no folder exists, create one with just the quote number.
         matching_folder = quote_number
         folder_path = os.path.join(base_folder, matching_folder, "Correspondence")
 
