@@ -2,6 +2,7 @@ import win32com.client
 import os
 import re
 import datetime
+import shutil
 
 # -----------------------------
 # 1️⃣ Set your OneDrive Desktop base folder path
@@ -36,6 +37,7 @@ print(f"Subject of newest email: {subject}")
 # -----------------------------
 # 4️⃣ Extract quote number dynamically
 # -----------------------------
+matching_folder = None
 quote_match = re.search(r'(Q\d+)', subject, re.IGNORECASE)
 if quote_match:
     quote_number = quote_match.group(1).upper()
@@ -81,3 +83,39 @@ full_path = os.path.join(folder_path, filename)
 # -----------------------------
 message.SaveAs(full_path, 3)  # 3 = olMSGUnicode
 print(f"✅ Email saved successfully: {full_path}")
+
+
+# -----------------------------
+# 8️⃣ Move the quote folder into the client’s folder (if found)
+# -----------------------------
+if 'matching_folder' in locals() and os.path.exists(matching_folder):
+    quote_folder_name = os.path.basename(matching_folder)
+
+    # Try to extract client name (word after Q####)
+    client_name_match = re.search(r'Q\d+\s+([A-Za-z]+)', quote_folder_name)
+    if client_name_match:
+        client_name = client_name_match.group(1)
+        print(f"Detected client name: {client_name}")
+
+        # Search for a matching client folder under "Bids Pending 2016"
+        client_root = os.path.join(one_drive_desktop, "Bids Pending 2016")
+        target_folder = None
+        for folder in os.listdir(client_root):
+            if client_name.lower() in folder.lower() and os.path.isdir(os.path.join(client_root, folder)):
+                target_folder = os.path.join(client_root, folder)
+                break
+
+        if target_folder:
+            destination = os.path.join(target_folder, quote_folder_name)
+            if not os.path.exists(destination):
+                print(f"📦 Moving folder:\n  From: {matching_folder}\n  To:   {target_folder}")
+                shutil.move(matching_folder, destination)
+                print(f"✅ Folder moved successfully to: {destination}")
+            else:
+                print(f"⚠️ Destination already exists: {destination}, skipping move.")
+        else:
+            print(f"⚠️ No matching client folder found for '{client_name}', skipping move.")
+    else:
+        print("⚠️ Could not detect client name from folder name.")
+else:
+    print("⚠️ No matching quote folder found, skipping move.")
