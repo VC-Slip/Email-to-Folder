@@ -37,6 +37,9 @@ print(f"Subject of newest email: {subject}")
 # -----------------------------
 # 4️⃣ Extract quote number dynamically
 # -----------------------------
+# -----------------------------
+# 4️⃣ Extract quote number dynamically
+# -----------------------------
 matching_folder = None
 quote_match = re.search(r'(Q\d+)', subject, re.IGNORECASE)
 if quote_match:
@@ -44,12 +47,12 @@ if quote_match:
     print(f"Quote number found: {quote_number}")
 
     # -----------------------------
-    # Search recursively for folder starting with Q#
+    # Search recursively for folder containing the quote number
     # -----------------------------
-    matching_folder = None
     for root, dirs, files in os.walk(base_folder):
         for folder_name in dirs:
-            if folder_name.upper().startswith(quote_number):
+            # Match even if folder has initials like "VC Q24024 ..."
+            if re.search(rf'\b{quote_number}\b', folder_name, re.IGNORECASE):
                 matching_folder = os.path.join(root, folder_name)
                 break
         if matching_folder:
@@ -64,6 +67,7 @@ if quote_match:
 else:
     folder_path = os.path.join(base_folder, "No_Quote_Found", "Correspondence")
     print("No quote number found in subject")
+
 
 # -----------------------------
 # 5️⃣ Make sure Correspondence folder exists
@@ -84,11 +88,10 @@ full_path = os.path.join(folder_path, filename)
 message.SaveAs(full_path, 3)  # 3 = olMSGUnicode
 print(f"✅ Email saved successfully: {full_path}")
 
-
 # -----------------------------
 # 8️⃣ Move the quote folder into the client’s folder (if found)
 # -----------------------------
-if 'matching_folder' in locals() and os.path.exists(matching_folder):
+if matching_folder and os.path.exists(matching_folder):
     quote_folder_name = os.path.basename(matching_folder)
 
     # Try to extract client name (word after Q####)
@@ -111,6 +114,21 @@ if 'matching_folder' in locals() and os.path.exists(matching_folder):
                 print(f"📦 Moving folder:\n  From: {matching_folder}\n  To:   {target_folder}")
                 shutil.move(matching_folder, destination)
                 print(f"✅ Folder moved successfully to: {destination}")
+
+                # -----------------------------
+                # 9️⃣ Rename after move (remove initials like 'VC ')
+                # -----------------------------
+                folder_name_only = os.path.basename(destination)
+                parent_folder = os.path.dirname(destination)
+                clean_folder_name = re.sub(r'^[A-Z]{2,3}\s+', '', folder_name_only)
+                new_path = os.path.join(parent_folder, clean_folder_name)
+
+                if clean_folder_name != folder_name_only:
+                    try:
+                        os.rename(destination, new_path)
+                        print(f"🧹 Renamed folder to: {new_path}")
+                    except Exception as e:
+                        print(f"⚠️ Could not rename folder: {e}")
             else:
                 print(f"⚠️ Destination already exists: {destination}, skipping move.")
         else:
